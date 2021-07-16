@@ -5,10 +5,13 @@
 package it.polito.tdp.genes;
 
 import java.net.URL;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 import it.polito.tdp.genes.model.Genes;
 import it.polito.tdp.genes.model.Model;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -30,7 +33,7 @@ public class FXMLController {
     private Button btnCreaGrafo; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbGeni"
-    private ComboBox<?> cmbGeni; // Value injected by FXMLLoader
+    private ComboBox<Genes> cmbGeni; // Value injected by FXMLLoader
 
     @FXML // fx:id="btnGeniAdiacenti"
     private Button btnGeniAdiacenti; // Value injected by FXMLLoader
@@ -46,19 +49,45 @@ public class FXMLController {
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
-    	
+    	this.model.creaGrafo();
+    	this.txtResult.setText("Grafo creato!");
 
     }
 
     @FXML
     void doGeniAdiacenti(ActionEvent event) {
-
+    	this.txtResult.setText("");
+    	this.txtResult.setText(this.model.getGeniAdiacenti(this.cmbGeni.getValue()));
     	
     }
 
     @FXML
     void doSimula(ActionEvent event) {
-
+    	Genes start = this.cmbGeni.getValue();
+    	if(start==null) {
+    		txtResult.appendText("ERRORE: scegliere un gene per iniziare!");
+    		return;
+    	}
+    	int n;
+    	try {
+    		n = Integer.parseInt(this.txtIng.getText());
+    	}
+    	catch (NumberFormatException e) {
+    		txtResult.appendText("ERRORE: numero di ingegneri errato!");
+    		return;
+    	}
+    	
+    	Map<Genes, Integer> studiati = this.model.simulaIngegneri(start, n);
+    	if(studiati == null) {
+    		txtResult.appendText("ERRORE: il gene selezionato è isolato!");
+    		return;
+    	}
+    	else {
+    		txtResult.appendText("Risultato simulazione: \n");
+    		for (Genes g : studiati.keySet()) {
+    			txtResult.appendText(g+" "+studiati.get(g)+"\n");
+    		}
+    	}
     }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
@@ -74,6 +103,12 @@ public class FXMLController {
     
     public void setModel(Model model) {
     	this.model = model;
+    	
+    	ObservableList<Genes> genes = FXCollections.observableArrayList();
+		for (Genes g : this.model.getEssentialGenes()) {
+			genes.add(g);
+		}
+		this.cmbGeni.setItems(genes);
     }
     
 }
